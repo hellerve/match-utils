@@ -7,6 +7,19 @@
         (if (nil? res)
           res
           (inc res)))))
+
+  (defndynamic insert [p l m]
+    (cond
+      (empty? l) m
+      (empty? m) l
+      (if (p (car l) (car m))
+        (cons (car l) (List.insert p (cdr l) m))
+        (cons (car m) (List.insert p (cdr m) l)))))
+
+  (defndynamic sort-by [p l]
+    (if (empty? l)
+      l
+      (List.insert p (list (car l)) (List.sort-by p (cdr l)))))
 )
 
 (defmodule OrderedTree
@@ -87,6 +100,31 @@
         (macro-error
           (list "defn-match expected all argument lists to be of length " a ".")))))
 
+  (defndynamic score-row [row]
+    (cond
+      (empty? row) 0
+      (symbol? (car row)) 0
+      (inc (MatchUtils.score-row (cdr row)))))
+
+  (defndynamic score [matrix]
+    (if (empty? (car matrix))
+      '()
+      (let [row (map car matrix)]
+        (cons (MatchUtils.score-row row) (MatchUtils.score (map cdr matrix))))))
+
+  (defndynamic sort-precedence [args paired]
+    (let [scores (MatchUtils.score (map car paired))
+          combined (map cdr (zip quote scores args))
+          sorted (List.sort-by (fn [a b] (> (car a) (car b))) combined)]
+      (list (map cadr sorted)
+        (map
+          (fn [pair]
+            (let [args (car pair)
+                  combined (map cdr (zip quote scores args))
+                  sorted (List.sort-by (fn [a b] (> (car a) (car b))) combined)]
+              (cons (map cadr sorted) (cdr pair))))
+          paired))))
+
   (defmacro defn-match [name :rest forms]
     (cond
       (empty? forms)
@@ -97,7 +135,10 @@
         (eval `(defn %name %@forms))
       (let-do [args (collect-into (map (fn [_] (gensym)) (car forms)) array)
                ; sort args here
-               paired (MatchUtils.pairs forms)]
+               paired (MatchUtils.pairs forms)
+               sorted (MatchUtils.sort-precedence args paired)
+               args (collect-into (car sorted) array)
+               paired (cadr sorted)]
         (MatchUtils.check-length (map (fn [p] (length (car p))) paired))
         (eval
           `(defn %name %args

@@ -2,7 +2,7 @@
 
 is a collection of utility macros around `match`.
 
-WIP, let me optimize before using it.
+WIP, the scoring has to be verified and literals should be matchable against.
 
 ## Usage
 
@@ -12,7 +12,7 @@ WIP, let me optimize before using it.
   (println* x)) ; => "hi"
 
 ; defn-match allows you to write pattern-matching functions
-; here i want to optimize dispatch
+; dispatch is optimized, but i don’t know how robustly
 (deftype Num
   (I [Int])
   (D [Double]))
