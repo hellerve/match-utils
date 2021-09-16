@@ -2,7 +2,8 @@
 
 is a collection of utility macros around `match`.
 
-WIP, the scoring has to be verified and literals should be matchable against.
+WIP, the scoring has to be verified and the optimization is messing with
+catch-all clauses.
 
 ## Usage
 

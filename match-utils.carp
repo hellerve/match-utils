@@ -79,20 +79,29 @@
     (reduce MatchUtils.deep-put (OrderedTree.init) forms))
 
   (defndynamic match-body [args forms]
-    (if (empty? args)
-      forms
-      ; TODO: special case for literals instead of sumtypes
-      (if (and (= (OrderedTree.length forms) 1) (symbol? (caar forms)))
+    (cond
+      (empty? args) forms
+      (and (= (OrderedTree.length forms) 1) (symbol? (caar forms)))
         ; special case: a single var binding
         (let [var (caar forms)]
           `(let [%var %(car args)]
              %(MatchUtils.match-body (cdr args) (Map.get (cadr forms) var))))
-        `(match %(car args)
-            %@(OrderedTree.reduce
-                forms
-                (fn [acc p]
-                  (append acc (cons (car p) (list (MatchUtils.match-body (cdr args) (cadr p))))))
-                '())))))
+      (not (list? (caar forms)))
+        `(case %(car args)
+          %@(OrderedTree.reduce
+              forms
+              (fn [acc p]
+                  (append acc
+                    (cons (if (= (car p) '_) (car args) (car p))
+                          (list (MatchUtils.match-body (cdr args) (cadr p))))))
+              '())
+          (do (println* %(str "Unhandled case in defn-match: " (car args))) (bottom)))
+      `(match %(car args)
+          %@(OrderedTree.reduce
+              forms
+              (fn [acc p]
+                (append acc (cons (car p) (list (MatchUtils.match-body (cdr args) (cadr p))))))
+              '()))))
 
   (defndynamic check-length [lens]
     (let [a (car lens)]
@@ -104,6 +113,7 @@
     (cond
       (empty? row) 0
       (symbol? (car row)) 0
+      (not (list? (car row))) (+ (MatchUtils.score-row (cdr row)) 2)
       (inc (MatchUtils.score-row (cdr row)))))
 
   (defndynamic score [matrix]
@@ -137,11 +147,11 @@
                ; sort args here
                paired (MatchUtils.pairs forms)
                sorted (MatchUtils.sort-precedence args paired)
-               args (collect-into (car sorted) array)
+               sargs (collect-into (car sorted) array)
                paired (cadr sorted)]
         (MatchUtils.check-length (map (fn [p] (length (car p))) paired))
         (eval
           `(defn %name %args
-            %(MatchUtils.match-body args
+            %(MatchUtils.match-body sargs
               (MatchUtils.sort-forms paired)))))))
 )
