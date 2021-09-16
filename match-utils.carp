@@ -1,25 +1,16 @@
 (defmodule List
-  (defndynamic find-index [l pred]
-    (cond
-      (empty? l) '()
-      (pred (car l)) 0
-      (let [res (List.find-index (cdr l) pred)]
-        (if (nil? res)
-          res
-          (inc res)))))
-
-  (defndynamic insert [p l m]
+  (defndynamic insert- [p l m]
     (cond
       (empty? l) m
       (empty? m) l
       (if (p (car l) (car m))
-        (cons (car l) (List.insert p (cdr l) m))
-        (cons (car m) (List.insert p (cdr m) l)))))
+        (cons (car l) (List.insert- p (cdr l) m))
+        (cons (car m) (List.insert- p (cdr m) l)))))
 
   (defndynamic sort-by [p l]
     (if (empty? l)
       l
-      (List.insert p (list (car l)) (List.sort-by p (cdr l)))))
+      (List.insert- p (list (car l)) (List.sort-by p (cdr l)))))
 )
 
 (defmodule OrderedTree
