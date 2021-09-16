@@ -113,8 +113,8 @@
     (cond
       (empty? row) 0
       (symbol? (car row)) 0
-      (not (list? (car row))) (+ (MatchUtils.score-row (cdr row)) 2)
-      (inc (MatchUtils.score-row (cdr row)))))
+      (not (list? (car row))) (inc (MatchUtils.score-row (cdr row)))
+      (+ (MatchUtils.score-row (cdr row)) 2)))
 
   (defndynamic score [matrix]
     (if (empty? (car matrix))
